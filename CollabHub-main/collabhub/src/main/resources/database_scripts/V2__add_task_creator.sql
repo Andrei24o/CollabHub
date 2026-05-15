@@ -1,0 +1,4 @@
+-- V2__add_task_creator.sql
+
+ALTER TABLE tasks ADD COLUMN creator_id INTEGER REFERENCES users(id);
+ALTER TABLE tasks ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
