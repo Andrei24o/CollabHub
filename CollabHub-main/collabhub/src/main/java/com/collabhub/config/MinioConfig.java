@@ -31,7 +31,7 @@ public class MinioConfig {
                 .credentials(accessKey, secretKey)
                 .build();
 
-        // Auto-create the bucket if it doesn't exist
+
         try {
             boolean exists = client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!exists) {

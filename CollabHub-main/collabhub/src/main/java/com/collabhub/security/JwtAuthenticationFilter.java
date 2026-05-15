@@ -45,7 +45,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = jwtUtils.getUsernameFromToken(token);
                 log.debug("Token is valid for user: {}", username);
 
-                // Look up the user's actual role from the database
                 User user = userRepository.findByUsername(username).orElse(null);
                 if (user == null || !Boolean.TRUE.equals(user.getActive())) {
                     log.warn("User {} not found or is deactivated", username);
