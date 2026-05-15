@@ -1,192 +1,226 @@
 # CollabHub
 
-Internal company platform for team collaboration, task tracking, and document management.
+Platformă internă pentru colaborare în echipă, gestionare task-uri și management de documente.
 
-## Tech Stack
+## Tehnologii utilizate
 
-| Component        | Technology                    |
-|------------------|-------------------------------|
+| Componentă       | Tehnologie                     |
+|------------------|--------------------------------|
 | Backend          | Java 17, Spring Boot 4.0      |
-| Security         | Spring Security + JWT          |
+| Securitate       | Spring Security + JWT          |
 | ORM              | Spring Data JPA / Hibernate    |
-| Database         | PostgreSQL 15                  |
-| Migrations       | Flyway                         |
-| File Storage     | MinIO (S3-compatible)          |
-| Containerization | Docker + Docker Compose        |
+| Bază de date     | PostgreSQL 15                  |
+| Migrații         | Flyway                         |
+| Stocare fișiere  | MinIO (compatibil S3)          |
+| Documentație API | Swagger / OpenAPI 3.0          |
+| CI/CD            | GitHub Actions                 |
+| Containerizare   | Docker + Docker Compose        |
 
-## Prerequisites
+## Cerințe preliminare
 
 - **Java 17+**
 - **Maven 3.9+**
 - **Docker & Docker Compose**
 
-## Getting Started
+## Pornirea aplicației
 
-### Option 1: Run Everything with Docker Compose
+### Opțiunea 1: Rulare completă cu Docker Compose
 
-This starts PostgreSQL, MinIO, and the application together:
+Pornește PostgreSQL, MinIO și aplicația împreună:
 
 ```bash
 cd collabhub
 docker-compose up --build
 ```
 
-The API will be available at `http://localhost:8080`.
-MinIO console is at `http://localhost:9001` (user: `minioadmin`, password: `minioadmin`).
+API-ul va fi disponibil la `http://localhost:8080`.
+Consola MinIO este la `http://localhost:9001` (utilizator: `minioadmin`, parolă: `minioadmin`).
 
-### Option 2: Run Locally (Development)
+### Opțiunea 2: Rulare locală (dezvoltare)
 
-1. **Start infrastructure** (PostgreSQL + MinIO):
+1. **Pornește infrastructura** (PostgreSQL + MinIO):
 
 ```bash
 cd collabhub
 docker-compose up postgres-db minio
 ```
 
-2. **Create the MinIO bucket** (first time only):
-   - Open `http://localhost:9001`, log in with `minioadmin` / `minioadmin`
-   - Create a bucket named `collabhub-docs`
+2. **Creează bucket-ul MinIO** (doar prima dată):
+   - Deschide `http://localhost:9001`, autentifică-te cu `minioadmin` / `minioadmin`
+   - Creează un bucket cu numele `collabhub-docs`
 
-3. **Run the application**:
+3. **Rulează aplicația**:
 
 ```bash
 cd collabhub
 ./mvnw spring-boot:run
 ```
 
-## API Endpoints
+## Endpoint-uri API
 
-### Authentication
+### Autentificare
 
-| Method | Endpoint             | Description              | Auth Required |
-|--------|----------------------|--------------------------|---------------|
-| POST   | `/api/auth/register` | Register a new user      | No            |
-| POST   | `/api/auth/login`    | Login and receive JWT    | No            |
+| Metodă | Endpoint             | Descriere                        | Autentificare |
+|--------|----------------------|----------------------------------|---------------|
+| POST   | `/api/auth/register` | Înregistrare utilizator nou      | Nu            |
+| POST   | `/api/auth/login`    | Autentificare și primire JWT     | Nu            |
 
-### User Management
+### Gestionare utilizatori
 
-| Method | Endpoint                      | Description                  | Auth Required |
-|--------|-------------------------------|------------------------------|---------------|
-| GET    | `/api/users/me`               | View own profile             | Yes           |
-| PUT    | `/api/users/me`               | Update own profile           | Yes           |
+| Metodă | Endpoint                      | Descriere                        | Autentificare |
+|--------|-------------------------------|----------------------------------|---------------|
+| GET    | `/api/users/me`               | Vizualizare profil propriu       | Da            |
+| PUT    | `/api/users/me`               | Actualizare profil propriu       | Da            |
 
-### Admin (ROLE_ADMIN only)
+### Administrare (doar ROLE_ADMIN)
 
-| Method | Endpoint                         | Description               | Auth Required |
-|--------|----------------------------------|---------------------------|---------------|
-| GET    | `/api/admin/users`               | List all users            | ADMIN         |
-| PUT    | `/api/admin/users/{id}/role`     | Change user role          | ADMIN         |
-| PUT    | `/api/admin/users/{id}/status`   | Activate/deactivate user  | ADMIN         |
+| Metodă | Endpoint                         | Descriere                        | Autentificare |
+|--------|----------------------------------|----------------------------------|---------------|
+| GET    | `/api/admin/users`               | Listare toți utilizatorii        | ADMIN         |
+| PUT    | `/api/admin/users/{id}/role`     | Schimbare rol utilizator         | ADMIN         |
+| PUT    | `/api/admin/users/{id}/status`   | Activare/dezactivare utilizator  | ADMIN         |
 
-### Projects
+### Proiecte
 
-| Method | Endpoint                        | Description              | Auth Required |
-|--------|---------------------------------|--------------------------|---------------|
-| GET    | `/api/projects`                 | List all active projects | Yes           |
-| POST   | `/api/projects`                 | Create a new project     | Yes           |
-| PUT    | `/api/projects/{id}`            | Update project info      | Yes           |
-| DELETE | `/api/projects/{id}`            | Soft-delete a project    | Yes           |
-| POST   | `/api/projects/{id}/members`    | Add member to project    | Yes           |
+| Metodă | Endpoint                        | Descriere                        | Autentificare |
+|--------|---------------------------------|----------------------------------|---------------|
+| GET    | `/api/projects`                 | Listare proiecte active          | Da            |
+| POST   | `/api/projects`                 | Creare proiect nou               | Da            |
+| PUT    | `/api/projects/{id}`            | Actualizare proiect              | Da            |
+| DELETE | `/api/projects/{id}`            | Ștergere logică (soft delete)    | Da            |
+| POST   | `/api/projects/{id}/members`    | Adăugare membru în proiect       | Da            |
 
-### Tasks
+### Task-uri
 
-| Method | Endpoint                                              | Description                        | Auth Required |
-|--------|-------------------------------------------------------|------------------------------------|---------------|
-| GET    | `/api/projects/{projectId}/tasks`                     | List tasks (optional filter)       | Yes           |
-| GET    | `/api/projects/{projectId}/tasks?status=X&priority=Y` | Filter tasks by status/priority    | Yes           |
-| POST   | `/api/projects/{projectId}/tasks`                     | Create a new task                  | Yes           |
-| PUT    | `/api/projects/{projectId}/tasks/{taskId}`            | Update a task                      | Yes           |
-| DELETE | `/api/projects/{projectId}/tasks/{taskId}`            | Delete a task                      | Yes           |
-| PUT    | `/api/projects/{projectId}/tasks/{taskId}/assign`     | Assign user to task                | Yes           |
+| Metodă | Endpoint                                              | Descriere                              | Autentificare |
+|--------|-------------------------------------------------------|----------------------------------------|---------------|
+| GET    | `/api/projects/{projectId}/tasks`                     | Listare task-uri (filtrare opțională)  | Da            |
+| GET    | `/api/projects/{projectId}/tasks?status=X&priority=Y` | Filtrare task-uri după status/prioritate | Da          |
+| POST   | `/api/projects/{projectId}/tasks`                     | Creare task nou                        | Da            |
+| PUT    | `/api/projects/{projectId}/tasks/{taskId}`            | Actualizare task                       | Da            |
+| DELETE | `/api/projects/{projectId}/tasks/{taskId}`            | Ștergere task                          | Da            |
+| PUT    | `/api/projects/{projectId}/tasks/{taskId}/assign`     | Asignare utilizator la task            | Da            |
 
-### Documents
+### Documente
 
-| Method | Endpoint                                                       | Description             | Auth Required |
-|--------|----------------------------------------------------------------|-------------------------|---------------|
-| GET    | `/api/projects/{projectId}/documents`                          | List project documents  | Yes           |
-| POST   | `/api/projects/{projectId}/documents`                          | Upload a document       | Yes           |
-| GET    | `/api/projects/{projectId}/documents/download/{fileName}`      | Download a document     | Yes           |
-| DELETE | `/api/projects/{projectId}/documents/{documentId}`             | Delete a document       | Yes           |
+| Metodă | Endpoint                                                       | Descriere                    | Autentificare |
+|--------|----------------------------------------------------------------|------------------------------|---------------|
+| GET    | `/api/projects/{projectId}/documents`                          | Listare documente proiect    | Da            |
+| POST   | `/api/projects/{projectId}/documents`                          | Încărcare document           | Da            |
+| GET    | `/api/projects/{projectId}/documents/download/{fileName}`      | Descărcare document          | Da            |
+| DELETE | `/api/projects/{projectId}/documents/{documentId}`             | Ștergere document            | Da            |
 
-## Example Requests
+## Exemple de cereri
 
-### Register
+### Înregistrare
 ```bash
 curl -X POST http://localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"username":"john","email":"john@example.com","password":"secret123"}'
 ```
 
-### Login
+### Autentificare
 ```bash
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"john","password":"secret123"}'
 ```
 
-### Create Project (use token from login response)
+### Creare proiect (folosește token-ul primit la autentificare)
 ```bash
 curl -X POST http://localhost:8080/api/projects \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
-  -d '{"name":"My Project","description":"A sample project","status":"ACTIVE"}'
+  -H "Authorization: Bearer <TOKEN_JWT>" \
+  -d '{"name":"Proiectul meu","description":"Un proiect exemplu","status":"ACTIVE"}'
 ```
 
-### Create Task
+### Creare task
 ```bash
 curl -X POST http://localhost:8080/api/projects/1/tasks \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
-  -d '{"title":"Fix bug","description":"Fix login bug","priority":"HIGH","deadline":"2026-06-01T00:00:00"}'
+  -H "Authorization: Bearer <TOKEN_JWT>" \
+  -d '{"title":"Rezolvare bug","description":"Rezolvare bug la autentificare","priority":"HIGH","deadline":"2026-06-01T00:00:00"}'
 ```
 
-### Upload Document
+### Încărcare document
 ```bash
 curl -X POST http://localhost:8080/api/projects/1/documents \
-  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
-  -F "file=@/path/to/document.pdf"
+  -H "Authorization: Bearer <TOKEN_JWT>" \
+  -F "file=@/cale/catre/document.pdf"
 ```
 
-## Project Structure
+## Structura proiectului
 
 ```
 collabhub/
 ├── src/main/java/com/collabhub/
-│   ├── config/          # MinIO configuration
-│   ├── controller/      # REST controllers + exception handlers
-│   ├── model/           # JPA entities and DTOs
-│   ├── repository/      # Spring Data JPA repositories
-│   ├── security/        # JWT utils, filter, and security config
-│   └── service/         # Business logic layer
+│   ├── config/          # Configurare MinIO + OpenAPI
+│   ├── controller/      # Controllere REST + tratare excepții
+│   ├── model/           # Entități JPA și DTO-uri
+│   ├── repository/      # Repository-uri Spring Data JPA
+│   ├── security/        # JWT utils, filtru și configurare securitate
+│   └── service/         # Logica de business + job-uri planificate
 ├── src/main/resources/
-│   ├── database_scripts/ # Flyway migrations
-│   └── application.yml   # Application configuration
+│   ├── database_scripts/ # Migrații Flyway
+│   └── application.yml   # Configurare aplicație
+├── .github/workflows/   # Pipeline CI/CD
 ├── Dockerfile
 ├── docker-compose.yml
 └── pom.xml
 ```
 
-## Backend Best Practices
+## Bune practici backend
 
-- **Layered Architecture** — Clear separation between Controller (REST), Service (business logic), and Repository (data access) layers
-- **Constructor Injection** — All dependencies injected via constructors using `@RequiredArgsConstructor` (no field injection)
-- **Input Validation** — Request bodies validated with Bean Validation (`@Valid`, `@NotBlank`, `@Size`, `@Email`)
-- **Centralized Exception Handling** — `@RestControllerAdvice` with `GlobalExceptionHandler` for consistent error responses
-- **Custom Exceptions** — `ResourceNotFoundException` for domain-specific error handling
-- **Structured Logging** — SLF4J (`@Slf4j`) used across all services for traceability
-- **Stateless Authentication** — JWT-based auth with no server-side session, BCrypt password hashing
-- **Role-Based Access Control** — Method-level security with `@PreAuthorize` for admin endpoints
-- **Soft Delete** — Projects use logical deletion instead of physical removal
-- **DTOs** — `UserProfileResponse` and `ProfileUpdateRequest` to decouple API responses from JPA entities
-- **Database Migrations** — Flyway for versioned, repeatable schema management (no `ddl-auto: update`)
-- **Externalized Configuration** — Environment variables with fallback defaults in `application.yml`
-- **Containerized Infrastructure** — Docker Compose for PostgreSQL, MinIO, and the application
+- **Arhitectură pe layere** — Separare clară între Controller (REST), Service (logică de business) și Repository (acces la date)
+- **Injectare prin constructor** — Toate dependențele sunt injectate prin constructor folosind `@RequiredArgsConstructor` (fără injectare pe câmpuri)
+- **Validare input** — Request body-urile sunt validate cu Bean Validation (`@Valid`, `@NotBlank`, `@Size`, `@Email`)
+- **Tratare centralizată a excepțiilor** — `@RestControllerAdvice` cu `GlobalExceptionHandler` pentru răspunsuri de eroare consistente
+- **Excepții custom** — `ResourceNotFoundException` pentru tratarea erorilor specifice domeniului
+- **Logging structurat** — SLF4J (`@Slf4j`) utilizat în toate serviciile pentru trasabilitate
+- **Autentificare stateless** — Autentificare bazată pe JWT fără sesiune pe server, hashing parole cu BCrypt
+- **Control acces bazat pe roluri** — Securitate la nivel de metodă cu `@PreAuthorize` pentru endpoint-urile de admin
+- **Ștergere logică (Soft Delete)** — Proiectele folosesc ștergere logică în loc de ștergere fizică
+- **DTO-uri** — `UserProfileResponse` și `ProfileUpdateRequest` pentru decuplarea răspunsurilor API de entitățile JPA
+- **Migrații bază de date** — Flyway pentru gestionarea versionată a schemei (fără `ddl-auto: update`)
+- **Configurare externalizată** — Variabile de mediu cu valori implicite în `application.yml`
+- **Infrastructură containerizată** — Docker Compose pentru PostgreSQL, MinIO și aplicație
+- **Documentație API interactivă** — Swagger / OpenAPI 3.0 cu suport autentificare JWT prin `springdoc-openapi`
+- **Job-uri automate în background** — Task `@Scheduled` care marchează automat task-urile expirate ca `OVERDUE`
+- **Integrare continuă** — Pipeline GitHub Actions care compilează și testează proiectul la fiecare push
 
-## Roles
+## Funcționalități noi
 
-- `ROLE_USER` — Default role for new registrations. Can manage own profile, create/view projects, tasks, and documents.
-- `ROLE_ADMIN` — Can list all users, change roles, and deactivate accounts.
+### 1. Documentație API interactivă — Swagger / OpenAPI 3.0
 
-## License
+Aplicația generează automat o interfață web interactivă pentru testarea endpoint-urilor, fără a fi nevoie de Postman sau alte tool-uri externe. Configurația include suport pentru autentificare JWT direct din Swagger UI.
 
-MIT License
+- **Dependență**: `springdoc-openapi-starter-webmvc-ui` în `pom.xml`
+- **Configurare**: `OpenApiConfig.java` definește schema de securitate Bearer JWT
+- **Acces**: `http://localhost:8080/swagger-ui.html`
+
+### 2. Job automat pentru task-uri expirate — `@Scheduled`
+
+Un serviciu care rulează automat în background și verifică periodic dacă există task-uri a căror deadline a trecut. Acestea sunt marcate automat cu statusul `OVERDUE`, fără intervenția utilizatorului.
+
+- **Serviciu**: `TaskCleanupService.java` cu `@Scheduled(fixedRate = 10000)`
+- **Activare**: `@EnableScheduling` pe clasa principală `CollabhubApplication`
+- **Logare**: Fiecare execuție este logată cu numărul de task-uri marcate
+
+### 3. Integrare continuă — GitHub Actions (CI)
+
+La fiecare push pe branch-ul `main`, GitHub Actions pornește automat un pipeline care:
+1. Instalează JDK 17
+2. Compilează proiectul cu Maven
+3. Rulează testele pentru a valida integritatea codului
+
+- **Configurare**: `.github/workflows/build.yml`
+- **Trigger**: Push și Pull Request pe branch-urile `main` / `master`
+
+## Roluri
+
+- `ROLE_USER` — Rol implicit la înregistrare. Poate gestiona propriul profil, crea/vizualiza proiecte, task-uri și documente.
+- `ROLE_ADMIN` — Poate lista toți utilizatorii, schimba roluri și dezactiva conturi.
+
+## Licență
+
+Licență MIT
