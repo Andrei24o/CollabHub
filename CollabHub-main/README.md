@@ -153,6 +153,7 @@ curl -X POST http://localhost:8080/api/projects/1/documents \
 
 ```
 collabhub/
+├── github/workflows/
 ├── src/main/java/com/collabhub/
 │   ├── config/          # Configurare MinIO + OpenAPI
 │   ├── controller/      # Controllere REST + tratare excepții
